@@ -1,0 +1,32 @@
+name: Weekly LinkedIn Drafts
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Mondays 16:00 UTC (not a fixed Pacific hour across DST).
+    - cron: "0 16 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Generate and QA drafts
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: gpt-4.1-mini
+        run: python src/linkedin_automation.py
+      - name: Upload draft artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linkedin-weekly-plan
+          path: data/latest_plan.json
+          if-no-files-found: error
